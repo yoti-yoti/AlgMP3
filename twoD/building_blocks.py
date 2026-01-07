@@ -44,7 +44,7 @@ class BuildingBlocks2D(object):
         return totat_cost
 
     def sample_random_config(self, goal_prob, goal):
-        if np.random.rand() < goal_prob:
+        if goal is not None and np.random.rand() < goal_prob:
             return goal
         
         low = np.array([0, -np.pi, -np.pi, -np.pi])
@@ -276,7 +276,8 @@ class BuildingBlocks2D(object):
         @param points1 list of inspected points.
         @param points2 list of inspected points.
         '''
-        return np.concatenate([points1, points2],axis=0)
+        # TODO 
+        pass
 
     def compute_coverage(self, inspected_points):
         '''

@@ -5,7 +5,7 @@ import time
 
 class RRTInspectionPlanner(object):
 
-    def __init__(self, bb, start, ext_mode, goal_prob, coverage, eta=1):
+    def __init__(self, bb, start, ext_mode, goal_prob, coverage, eta=0.2):
 
         # set environment and search tree
         self.bb = bb
@@ -17,6 +17,7 @@ class RRTInspectionPlanner(object):
         self.goal_prob = goal_prob
         self.coverage = coverage
         self.eta = eta
+        self.goal = np.array([0.3, 0.15, 1.0, 1.1]) ## for special case
 
         # set step size - remove for students
         self.step_size = min(self.bb.env.xlimit[-1] / 50, self.bb.env.ylimit[-1] / 200)
@@ -25,8 +26,19 @@ class RRTInspectionPlanner(object):
         '''
         Compute and return the plan. The function should return a numpy array containing the states in the configuration space.
         '''
-        # TODO: HW3 2.3.3
-        pass
+        self.tree.add_vertex(self.start, [])
+        while self.tree.max_coverage < self.coverage:
+            rand_config = self.bb.sample_random_config(self.goal_prob, self.goal)
+            self.extend(self.tree.get_nearest_config(rand_config), rand_config)
+        
+        # find shortest path
+        plan = [np.array(self.tree.vertices[self.tree.max_coverage_id].config)]
+        curr = self.tree.max_coverage_id
+        while curr != 0:
+            curr = self.tree.edges[curr]
+            plan.append(np.array(self.tree.vertices[curr].config))
+        plan.reverse()
+        return np.array(plan)
 
     def compute_cost(self, plan):
         '''
@@ -48,7 +60,7 @@ class RRTInspectionPlanner(object):
 
     def extend_1(self, near_config, rand_config):
         if self.bb.config_validity_checker(np.array(rand_config)) and self.bb.edge_validity_checker(np.array(near_config[1]), np.array(rand_config)):
-            vid = self.tree.add_vertex(rand_config)
+            vid = self.tree.add_vertex(rand_config, self.bb.get_inspected_points(rand_config))
             self.tree.add_edge(near_config[0], vid, edge_cost=self.bb.compute_distance(near_config[1], rand_config))
 
     def extend_2(self, near_config, rand_config):
@@ -58,6 +70,6 @@ class RRTInspectionPlanner(object):
             return
         extend_config = [(near_config[1][i]) + min(self.eta, length) * ((rand_config[i]-near_config[1][i])/length) for i in range(len(near_config[1]))]
         if self.bb.config_validity_checker(np.array(extend_config)) and self.bb.edge_validity_checker(np.array(near_config[1]), np.array(extend_config)):
-            vid = self.tree.add_vertex(extend_config)
+            vid = self.tree.add_vertex(extend_config, self.bb.get_inspected_points(extend_config))
             self.tree.add_edge(near_config[0], vid, edge_cost=self.eta)
 

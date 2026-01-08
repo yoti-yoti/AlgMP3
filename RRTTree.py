@@ -35,6 +35,7 @@ class RRTTree(object):
             if v_coverage > self.max_coverage:
                 self.max_coverage = v_coverage
                 self.max_coverage_id = vid
+                print(self.max_coverage)
 
         return vid
 

@@ -26,9 +26,9 @@ class RRTInspectionPlanner(object):
         '''
         Compute and return the plan. The function should return a numpy array containing the states in the configuration space.
         '''
-        self.tree.add_vertex(self.start, [])
+        self.tree.add_vertex(self.start, np.array([]))
         while self.tree.max_coverage < self.coverage:
-            rand_config = self.bb.sample_random_config(self.goal_prob, self.goal)
+            rand_config = self.bb.sample_random_config(0, self.goal)
             self.extend(self.tree.get_nearest_config(rand_config), rand_config)
         
         # find shortest path
@@ -70,6 +70,6 @@ class RRTInspectionPlanner(object):
             return
         extend_config = [(near_config[1][i]) + min(self.eta, length) * ((rand_config[i]-near_config[1][i])/length) for i in range(len(near_config[1]))]
         if self.bb.config_validity_checker(np.array(extend_config)) and self.bb.edge_validity_checker(np.array(near_config[1]), np.array(extend_config)):
-            vid = self.tree.add_vertex(extend_config, self.bb.get_inspected_points(extend_config))
+            vid = self.tree.add_vertex(extend_config, self.bb.compute_union_of_points(self.bb.get_inspected_points(extend_config), self.tree.vertices[near_config[0]].inspected_points))
             self.tree.add_edge(near_config[0], vid, edge_cost=self.eta)
 

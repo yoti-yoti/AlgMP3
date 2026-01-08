@@ -276,8 +276,9 @@ class BuildingBlocks2D(object):
         @param points1 list of inspected points.
         @param points2 list of inspected points.
         '''
-        # TODO 
-        pass
+        points1_set = set([tuple(p) for p in points1])
+        res = np.array(list(points1_set.union([tuple(p) for p in points2])))
+        return res
 
     def compute_coverage(self, inspected_points):
         '''

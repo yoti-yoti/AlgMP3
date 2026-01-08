@@ -132,11 +132,40 @@ def run_2d_rrt_inspection_planning():
     MAP_DETAILS = {"json_file": "twoD/map_ip.json", "start": np.array([0.78, -0.78, 0.0, 0.0]), "goal": np.array([0.3, 0.15, 1.0, 1.1])}
     planning_env = MapEnvironment(json_file=MAP_DETAILS["json_file"], task="ip")
     bb = BuildingBlocks2D(planning_env)
-    planner = RRTInspectionPlanner(bb=bb, start=MAP_DETAILS["start"], ext_mode="E2", goal_prob=0.01, coverage=0.5)
+    planner = RRTInspectionPlanner(bb=bb, start=MAP_DETAILS["start"], ext_mode="E2", goal_prob=0.01, coverage=0.75)
 
     # execute plan
     plan = planner.plan()
     Visualizer(bb).visualize_plan(plan=plan, start=MAP_DETAILS["start"])
+
+def run_inspection_loop():
+    MAP_DETAILS = {"json_file": "twoD/map_ip.json", "start": np.array([0.78, -0.78, 0.0, 0.0]), "goal": np.array([0.3, 0.15, 1.0, 1.1])}
+    planning_env = MapEnvironment(json_file=MAP_DETAILS["json_file"], task="ip")
+    bb = BuildingBlocks2D(planning_env)
+    coverage_data = {
+        0.5 : [],
+        0.75 : [],
+    }
+    time_data = {
+        0.5 : [],
+        0.75 : [],
+    }
+    for coverage in [0.5, 0.75]:
+        for i in range(10):
+            print(f"coverage: {coverage}, iter: {i}")
+            planner = RRTInspectionPlanner(bb=bb, start=MAP_DETAILS["start"], ext_mode="E2", goal_prob=0.01, coverage=coverage)
+            # execute plan
+            start = datetime.now()
+            plan = planner.plan()
+            total_time = datetime.now() - start
+            time_data[coverage].append(total_time.total_seconds())
+            coverage_data[coverage].append(planner.compute_cost(plan))
+    print(coverage_data)
+    print(time_data)
+    print(f"avg_t_50 = {sum(time_data[0.5])/10:.4f}")
+    print(f"avg_t_75 = {sum(time_data[0.75])/10:.4f}")
+    print(f"avg_c_50 = {sum(coverage_data[0.5])/10:.4f}")
+    print(f"avg_c_75 = {sum(coverage_data[0.75])/10:.4f}")
 
 def run_3d():
     ur_params = UR5e_PARAMS(inflation_factor=1)
@@ -200,3 +229,4 @@ if __name__ == "__main__":
     # run_2d_rrt_star_motion_planning()
     # run_3d()
     # run_2d_rrt_loop()
+    run_inspection_loop()
